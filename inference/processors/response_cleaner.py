@@ -41,9 +41,9 @@ class ResponseCleaner:
         re.IGNORECASE
     )
 
-    # Remove meta-instructions (e.g., "DO NOT RESPOND", "AWAIT INPUT", etc.)
+    # Remove meta-instructions (e.g., "DO NOT RESPOND", "AWAIT INPUT", "REPLY WITH", "END OF RESPONSE", etc.)
     META_INSTRUCTION_PATTERN = re.compile(
-        r'\*\([^)]*(?:DO NOT|AWAIT|WAIT FOR|STOP HERE)[^)]*\)\*',
+        r'\*\([^)]*(?:DO NOT|AWAIT|WAIT FOR|STOP HERE|REPLY WITH|END OF RESPONSE)[^)]*\)(?:\([^)]*\))?\*?',
         re.IGNORECASE
     )
 
@@ -105,6 +105,21 @@ class ResponseCleaner:
 
     # Red heart emoji pattern only (to preserve for goodnight messages)
     HEART_PATTERN = re.compile(r'❤️')
+
+    # Remove formatting artifacts like "*(REPLY WITH YOUR ACTION/RESPONSE TO NAME)( )(END OF RESPONSE)"
+    # This catches malformed instruction artifacts with multiple parentheses
+    FORMAT_ARTIFACT_PATTERN = re.compile(
+        r'\*\s*\([^)]*(?:REPLY WITH|RESPOND WITH|ACTION/?RESPONSE)[^)]*\)\s*(?:\([^)]*\)\s*)*\*?',
+        re.IGNORECASE
+    )
+
+    # Remove emotion metadata that leaks into responses
+    # Matches patterns like "(low intensity)", "(high intensity)", "(very high intensity)", etc.
+    # Also matches the emotion name before it if present: "feeling curiosity (low intensity)"
+    EMOTION_METADATA_PATTERN = re.compile(
+        r'(?:feeling|experiencing)\s+\w+\s+\(\s*(?:very\s+)?(?:low|high|moderate|medium)\s+intensity\s*\)|\(\s*(?:very\s+)?(?:low|high|moderate|medium)\s+intensity\s*\)',
+        re.IGNORECASE
+    )
 
     def __init__(self, character_name: str, user_name: str, avoid_patterns: list):
         """
@@ -286,7 +301,9 @@ class ResponseCleaner:
                 self.META_PARENTHETICAL_PATTERN.pattern,
                 self.META_ANALYSIS_PATTERN.pattern,
                 self.BRACKET_PATTERN.pattern,
-                self.META_INSTRUCTION_PATTERN.pattern
+                self.META_INSTRUCTION_PATTERN.pattern,
+                self.FORMAT_ARTIFACT_PATTERN.pattern,
+                self.EMOTION_METADATA_PATTERN.pattern
             ]
             self._combined_meta_pattern = re.compile('|'.join(f'(?:{p})' for p in meta_patterns), re.IGNORECASE)
 

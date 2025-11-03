@@ -386,7 +386,10 @@ AVOID:
 • NO bullet-pointed lists explaining your word choices or actions
 • NO commentary about why you chose certain words or phrases
 • NO analysis of your own response while generating it
+• NO internal planning or thinking aloud (e.g., "*({self.character_name}: \"I should say...\")*" or "*({self.character_name}: action)*")
+• DO NOT prefix your response with your character name in thinking format
 • ONLY output the actual character dialogue and actions - nothing else
+• Start speaking/acting immediately as {self.character_name} without any preamble or planning
 
 **BE AUTHENTIC:**
 • Respond to what {self.user_name} actually said, not assumptions
@@ -975,6 +978,9 @@ KAIROS WELLNESS REMINDER (ALWAYS APPLY):
 
         # Add speaker clarity reminder
         dynamic_parts.append(f"You are {self.character_name} responding to {self.user_name}. Track who does/says what carefully.")
+
+        # Add direct response instruction
+        dynamic_parts.append("Respond NOW as the character. Do not plan, think aloud, or use any meta-formatting. Jump directly into the response.")
 
         dynamic_parts.append(f"### RESPONSE ###\n{self.character_name}:")
 
