@@ -66,26 +66,6 @@ Build your own AI companion using local language models. Chat, roleplay, brainst
 
 ---
 
-## Why Use Oread?
-
-**Tired of AI companions that:**
-- Mine your conversations for profit?
-- Censor everything aggressively?
-- Lock you into subscriptions?
-- Give you zero control?
-
-**Oread is different:**
-
-| Commercial Services | Oread |
-|---------------------|-------|
-| Your data goes to their servers | Everything stays on your computer |
-| Aggressive censorship | Ethical boundaries, but transparent |
-| No customization | Full control over personality & responses |
-| Pay monthly forever | Open source & free |
-| Mystery meat moderation | You can read the code |
-
-**Simple philosophy:** You're an adult. You should control your AI companion, not rent it.
-
 ## Features
 
 ### What's Included
