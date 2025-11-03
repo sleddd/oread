@@ -533,11 +533,13 @@ async function saveProfile() {
         }
 
         // Merge form data with existing profile to preserve favorites
+        // Extract the character data if it's in v2.0 format
+        const existingCharacter = existingProfile?.character || existingProfile;
+
         const profileData = existingProfile ? {
-            ...existingProfile,
             ...formData,
             // Explicitly preserve favorites from existing profile
-            favorites: existingProfile.favorites || []
+            favorites: existingCharacter.favorites || []
         } : formData;
 
         const response = await CONFIG.fetch(`/api/profiles/${encodeURIComponent(profileName)}`, {
