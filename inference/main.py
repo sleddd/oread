@@ -526,14 +526,21 @@ async def save_conversation_to_memory(request: Dict[str, Any]):
                 "message": "Memory not available - conversation saved to session only"
             }
 
-        # Store user message
-        user_msg_id = memory_service.store_message(
-            message=request.get("user_message", ""),
-            character=request.get("character_name", "Unknown"),
-            speaker="User",
-            session_id=request.get("session_id", "unknown"),
-            emotion=request.get("emotion")
-        )
+        # Store user message (skip system messages)
+        user_message = request.get("user_message", "")
+        is_system_message = user_message.strip().startswith("[System:")
+
+        user_msg_id = None
+        if not is_system_message:
+            user_msg_id = memory_service.store_message(
+                message=user_message,
+                character=request.get("character_name", "Unknown"),
+                speaker="User",
+                session_id=request.get("session_id", "unknown"),
+                emotion=request.get("emotion")
+            )
+        else:
+            logger.debug("Skipping system message from memory storage")
 
         # Store character response
         char_msg_id = memory_service.store_message(

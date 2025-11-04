@@ -13,16 +13,12 @@ export class InputSanitizer {
     /**
      * Sanitize chat message input
      */
-    static sanitizeChatMessage(message, maxLength = 5000) {
+    static sanitizeChatMessage(message) {
         if (!message || !message.trim()) {
             throw new Error("Message cannot be empty");
         }
         // Trim whitespace
         message = message.trim();
-        // Check length
-        if (message.length > maxLength) {
-            throw new Error(`Message too long (max ${maxLength} characters)`);
-        }
         // Remove script tags
         if (this.SCRIPT_PATTERN.test(message)) {
             logger.warn(`Script tag detected in message: ${message.slice(0, 100)}`);
@@ -40,14 +36,11 @@ export class InputSanitizer {
     /**
      * Sanitize profile name input
      */
-    static sanitizeProfileName(name, maxLength = 50) {
+    static sanitizeProfileName(name) {
         if (!name || !name.trim()) {
             throw new Error("Name cannot be empty");
         }
         name = name.trim();
-        if (name.length > maxLength) {
-            throw new Error(`Name too long (max ${maxLength} characters)`);
-        }
         // Only allow alphanumeric, spaces, hyphens, underscores, and periods
         if (!this.ALLOWED_NAME_PATTERN.test(name)) {
             throw new Error("Name contains invalid characters");
@@ -57,14 +50,11 @@ export class InputSanitizer {
     /**
      * Sanitize general text field input (for profile descriptions, etc.)
      */
-    static sanitizeTextField(text, maxLength = 10000) {
+    static sanitizeTextField(text) {
         if (!text) {
             return "";
         }
         text = text.trim();
-        if (text.length > maxLength) {
-            throw new Error(`Text too long (max ${maxLength} characters)`);
-        }
         // Remove script tags
         if (this.SCRIPT_PATTERN.test(text)) {
             logger.warn("Script tag detected in text field");
@@ -103,14 +93,11 @@ export class InputSanitizer {
     /**
      * Sanitize timezone string
      */
-    static sanitizeTimezone(timezone, maxLength = 50) {
+    static sanitizeTimezone(timezone) {
         if (!timezone || !timezone.trim()) {
             throw new Error("Timezone cannot be empty");
         }
         timezone = timezone.trim();
-        if (timezone.length > maxLength) {
-            throw new Error(`Timezone too long (max ${maxLength} characters)`);
-        }
         // Allow alphanumeric, underscores, hyphens, and forward slashes (for timezones like America/New_York)
         if (!/^[a-zA-Z0-9/_\-]+$/.test(timezone)) {
             throw new Error("Timezone contains invalid characters");

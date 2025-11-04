@@ -55,10 +55,20 @@ class ContextManager:
 
             if relevant_memories:
                 memory_lines = []
+                seen_messages = set()  # Deduplicate identical messages
+
                 for mem in relevant_memories:
                     speaker = mem['metadata'].get('speaker', 'Unknown')
                     msg = mem['message']
                     similarity = mem.get('similarity', 0)
+
+                    # Skip system messages and duplicates
+                    if msg.strip().startswith("[System:"):
+                        continue
+                    if msg in seen_messages:
+                        continue
+
+                    seen_messages.add(msg)
 
                     # Only include very high-similarity memories (stricter for speed)
                     if similarity > 0.92:

@@ -484,6 +484,15 @@ class LLMProcessor:
                 character_backstory = character_profile.get('backstory', '')
                 tag_selections = character_profile.get('tagSelections', {})
 
+                # Extract character boundaries (string with newlines → list)
+                character_boundaries_str = character_profile.get('boundaries', '')
+                character_boundaries = [b.strip() for b in character_boundaries_str.split('\n') if b.strip() and b.strip() != '-']
+
+                # Extract additional character fields for identity chunks
+                character_species = character_profile.get('species', 'Human')
+                character_age = character_profile.get('age', 25)
+                character_interests = character_profile.get('interests', '')
+
                 # Extract user settings from character_profile (Node.js merged them in)
                 user_name = character_profile.get('user_name', character_profile.get('userName', 'User'))
                 user_gender = character_profile.get('user_gender', 'non-binary')
@@ -525,7 +534,12 @@ class LLMProcessor:
                     shared_roleplay_events=shared_roleplay_events,
                     user_communication_boundaries=user_communication_boundaries,
                     lorebook=lorebook,
-                    personality_tags=tag_selections  # Pass the dict, not a list
+                    personality_tags=tag_selections,  # Pass the dict, not a list
+                    # V3 additions for identity chunks
+                    character_species=character_species,
+                    character_age=character_age,
+                    character_interests=character_interests,
+                    character_boundaries=character_boundaries
                 )
 
                 # Get response cleaner for this character

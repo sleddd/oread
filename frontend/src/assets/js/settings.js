@@ -892,7 +892,6 @@ function addLifeEventToDOM(eventText, index) {
     input.placeholder = 'e.g., Graduated college in 2015';
     input.style.cssText = 'flex: 1;';
     input.className = 'life-event-input';
-    input.maxLength = 150;
 
     const removeBtn = document.createElement('button');
     removeBtn.type = 'button';

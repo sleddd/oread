@@ -229,7 +229,19 @@ class LorebookRetriever:
                 tone = matched_response.get("tone", "")
                 action = matched_response.get("action", "")
 
-                content = f"**Tone:** {tone}\n\n**Action:** {action}"
+                # Only include non-empty sections
+                content_parts = []
+                if tone:
+                    content_parts.append(f"**Tone:** {tone}")
+                if action:
+                    content_parts.append(f"**Action:** {action}")
+
+                # Skip this chunk if both tone and action are empty
+                if not content_parts:
+                    logger.debug(f"Skipping '{chunk['id']}' - empty tone and action for emotion '{matched_emotion}'")
+                    continue
+
+                content = "\n\n".join(content_parts)
                 new_chunk["content"] = content
 
                 # Update tokens from emotion-specific response
