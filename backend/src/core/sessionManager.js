@@ -237,6 +237,14 @@ class SessionManager {
     }
 
     /**
+     * Clear starter tracking for all characters
+     * Used on logout to ensure starters show on next login
+     */
+    clearAllStarterTracking() {
+        this.charactersWithStarters.clear();
+    }
+
+    /**
      * Get stats about active sessions
      */
     getStats() {

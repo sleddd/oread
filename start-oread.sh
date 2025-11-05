@@ -32,6 +32,9 @@ print_error() {
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 cd "$SCRIPT_DIR"
 
+# Create logs directory if it doesn't exist
+mkdir -p "$SCRIPT_DIR/logs"
+
 # Store PIDs
 INFERENCE_PID=""
 BACKEND_PID=""
@@ -96,8 +99,18 @@ if [ -d "venv" ]; then
     source venv/bin/activate
 fi
 
+# Determine which Python to use
+if command -v python3 >/dev/null 2>&1; then
+    PYTHON_CMD=python3
+elif command -v python >/dev/null 2>&1; then
+    PYTHON_CMD=python
+else
+    print_error "Python not found. Please install Python 3.8 or higher."
+    exit 1
+fi
+
 # Start inference in background
-python main.py > ../logs/inference.log 2>&1 &
+$PYTHON_CMD main.py > ../logs/inference.log 2>&1 &
 INFERENCE_PID=$!
 
 # Wait for inference to be ready

@@ -38,9 +38,18 @@ async function checkAuthentication() {
 // Handle logout
 async function handleLogout() {
     try {
+        // Get session ID before clearing storage
+        const sessionId = sessionStorage.getItem('chatSessionId');
+
         const response = await fetch(`${getAPIBase()}/auth/logout`, {
             method: 'POST',
-            credentials: 'include'
+            credentials: 'include',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                sessionId: sessionId
+            })
         });
 
         const result = await response.json();

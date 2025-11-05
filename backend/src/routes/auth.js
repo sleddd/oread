@@ -90,31 +90,62 @@ router.post('/auth/login', async (req, res) => {
 
 /**
  * POST /auth/logout
- * Destroy the current session
+ * Destroy the current session and clear chatbot state
  */
-router.post('/auth/logout', (req, res) => {
-    if (req.session) {
-        req.session.destroy((err) => {
-            if (err) {
-                console.error('Session destruction error:', err);
-                return res.status(500).json({
-                    success: false,
-                    error: 'Failed to logout'
-                });
+router.post('/auth/logout', async (req, res) => {
+    try {
+        // Get session ID before destroying session
+        const sessionId = req.body.sessionId || req.headers['x-session-id'];
+
+        // Clear chatbot session if session ID is provided
+        if (sessionId) {
+            try {
+                const { getSessionManager } = await import('../core/sessionManager.js');
+                const sessionManager = getSessionManager();
+
+                // Delete the chatbot session (clears conversation history and instance)
+                sessionManager.deleteSession(sessionId);
+
+                // Clear starter tracking so starters show on next login
+                sessionManager.clearAllStarterTracking();
+
+                console.log(`✅ Cleared chatbot session and starter tracking`);
+            } catch (sessionError) {
+                console.error('Failed to clear chatbot session:', sessionError);
+                // Continue with logout even if session clear fails
             }
+        }
 
-            // Clear the session cookie
-            res.clearCookie('connect.sid');
+        // Destroy the auth session
+        if (req.session) {
+            req.session.destroy((err) => {
+                if (err) {
+                    console.error('Session destruction error:', err);
+                    return res.status(500).json({
+                        success: false,
+                        error: 'Failed to logout'
+                    });
+                }
 
+                // Clear the session cookie
+                res.clearCookie('connect.sid');
+
+                return res.json({
+                    success: true,
+                    message: 'Logged out successfully'
+                });
+            });
+        } else {
             return res.json({
                 success: true,
-                message: 'Logged out successfully'
+                message: 'No active session'
             });
-        });
-    } else {
-        return res.json({
-            success: true,
-            message: 'No active session'
+        }
+    } catch (error) {
+        console.error('Logout error:', error);
+        return res.status(500).json({
+            success: false,
+            error: 'Failed to logout'
         });
     }
 });
