@@ -199,24 +199,26 @@ class ResponseCleaner:
         """
         text = text.strip()
 
-        # Check if this is a goodnight message or has heart emoji
+        # Check if this is a goodnight message
         is_goodnight = bool(re.search(r'\b(?:good\s*night|goodnight|sleep\s*well|sweet\s*dreams)\b', text, re.IGNORECASE))
-        has_heart_emoji = bool(self.HEART_PATTERN.search(text))
 
-        # Preserve heart emojis by temporarily replacing them
+        # Preserve heart emojis ONLY for goodnight messages
         heart_placeholder = "<<<HEART_EMOJI>>>"
         hearts_found = []
-        if has_heart_emoji or is_goodnight:
-            # Save all heart emojis
+        if is_goodnight:
+            # Save all heart emojis for goodnight messages
             hearts_found = self.HEART_PATTERN.findall(text)
             # Replace with placeholder
             text = self.HEART_PATTERN.sub(heart_placeholder, text)
 
-        # Remove all other emojis
+        # Remove ALL emojis (including hearts for non-goodnight messages)
         text = self.EMOJI_PATTERN.sub('', text)
+        # Also remove hearts that weren't preserved
+        if not is_goodnight:
+            text = self.HEART_PATTERN.sub('', text)
 
-        # Restore heart emojis
-        if hearts_found:
+        # Restore heart emojis ONLY for goodnight messages
+        if is_goodnight and hearts_found:
             for heart in hearts_found:
                 text = text.replace(heart_placeholder, heart, 1)
 
