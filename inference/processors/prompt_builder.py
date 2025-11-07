@@ -914,7 +914,6 @@ Example format: "(takes a slow, deep breath) Hello {self.user_name}. I'm here fo
         # ═══════════════════════════════════════════════════════════
 
         # Build dynamic components
-        conversation_history = ''
         context = self._build_context(conversation_history)
         time_context = self._get_time_context()
         emotion_context = self._build_emotion_context(emotion_data) if emotion_data else ""
