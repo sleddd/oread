@@ -319,8 +319,8 @@ class PromptBuilder:
             char_parts.append(f"**Role:** {self.character_role}")
 
         if self.character_backstory:
-            short_backstory = self.character_backstory[:300] + "..." if len(self.character_backstory) > 300 else self.character_backstory
-            char_parts.append(f"**Backstory:** {short_backstory}")
+            backstory_text = self.character_backstory[:2000] + "..." if len(self.character_backstory) > 2000 else self.character_backstory
+            char_parts.append(f"**Backstory:** {backstory_text}")
 
         if hasattr(self, 'character_interests') and self.character_interests:
             interests_str = self.character_interests[:200] + "..." if len(self.character_interests) > 200 else self.character_interests
@@ -1058,5 +1058,12 @@ Example format: "(takes a slow, deep breath) Hello {self.user_name}. I'm here fo
         if lorebook_section:
            logger.info(f"    - Lorebook (detailed backstory/boundaries/personality): ~{len(lorebook_section)//4} tokens")
         logger.info(f"  TOTAL: {len(final_prompt)} chars (~{len(final_prompt)//4} tokens)")
+
+        # DEBUG: Always log full prompt for debugging
+        logger.info("\n" + "="*80)
+        logger.info("FULL PROMPT:")
+        logger.info("="*80)
+        logger.info(final_prompt)
+        logger.info("="*80 + "\n")
 
         return final_prompt
