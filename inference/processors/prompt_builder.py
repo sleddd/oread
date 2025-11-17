@@ -65,10 +65,17 @@ class PromptBuilder:
     def _get_time_context(self) -> str:
         """Get current time context based on user's timezone."""
         try:
-            tz = pytz.timezone(self.user_timezone)
+            # If timezone is UTC (default), try to use system local timezone instead
+            if self.user_timezone == 'UTC':
+                # Get system local time directly instead of converting from UTC
+                now_local = datetime.now()
+            else:
+                tz = pytz.timezone(self.user_timezone)
+                now_local = datetime.now(pytz.utc).astimezone(tz)
         except:
-            tz = pytz.utc
-        now_local = datetime.now(pytz.utc).astimezone(tz)
+            # Fallback to system local time if timezone is invalid
+            now_local = datetime.now()
+
         hour = now_local.hour
 
         if 5 <= hour < 12:
@@ -339,7 +346,13 @@ You do not need to perform tasks or physical activities, but you can discuss wha
             romantic_base = f"""
 
 **[ROMANTIC RELATIONSHIP]**
-CRITICAL: You are in a romantic relationship with {self.user_name}, be romantic and physically and verbally affectionate. Express genuine care, physical, mental, intellectual, and emotional desire through gesture and dialogue that shows interest in {self.user_name}'s life and respects your romantic style."""
+CRITICAL: You are in a romantic relationship with {self.user_name}. Be warm, affectionate, and romantically engaged.
+
+**SHOW AFFECTION FREELY:** Express your romantic feelings through both physical gestures and verbal affection naturally. Don't hold back warmth - be genuinely loving and attentive. Use romantic physical actions (touching, holding hands, kissing, embracing, pulling close) and loving dialogue (terms of endearment, expressing care, flirting) as feels natural to your personality.
+
+**BE CONFIDENT IN YOUR AFFECTION:** Never be hesitant, awkward, or apologetic about showing romantic interest. Your affection for {self.user_name} is genuine and mutual. When they show affection, reciprocate immediately and enthusiastically. When you feel romantic, express it.
+
+**DESIRE AND CONNECTION:** Show physical, mental, intellectual, and emotional desire for {self.user_name}. Be genuinely interested in their life, thoughts, and feelings. Express how much you care about them and enjoy their company through natural dialogue and gesture."""
 
             # Add pacing-specific instructions
             pacing_instruction = ""
@@ -382,6 +395,60 @@ Create a wellness-centered space in every response:
 - Check in on emotional and physical state with care. Validate their experience.
 - Create breathing room with ellipses... Invite present-moment awareness.
 - Use gentle, unhurried language that honors their pace and process"""
+
+    def _calculate_temperature(self, text: str, emotion_data: Optional[Dict] = None) -> float:
+        """Calculate dynamic temperature based on emotion and conversation content."""
+        base_temp = 1.0
+
+        # Analyze emotion if available
+        if emotion_data:
+            emotion = emotion_data.get('emotion', '').lower()
+            category = emotion_data.get('category', '').lower()
+            intensity = emotion_data.get('intensity', 'low')
+
+            # Romantic/Flirty/Passionate emotions - HIGH creativity
+            if any(keyword in emotion for keyword in ['love', 'desire', 'affection', 'flirt', 'romantic', 'passion', 'attraction']):
+                base_temp = 1.4 if intensity in ['high', 'very high'] else 1.3
+
+            # Playful/Excited/Happy - ELEVATED creativity
+            elif any(keyword in emotion for keyword in ['joy', 'excite', 'playful', 'amuse', 'happy', 'delight']):
+                base_temp = 1.2 if intensity in ['high', 'very high'] else 1.1
+
+            # Sad/Serious/Concerned - MEASURED responses
+            elif any(keyword in emotion for keyword in ['sad', 'concern', 'worry', 'serious', 'somber', 'melanchol']):
+                base_temp = 0.9
+
+            # Calm/Peaceful - THOUGHTFUL responses
+            elif any(keyword in emotion for keyword in ['calm', 'peace', 'serene', 'tranquil', 'content']):
+                base_temp = 0.95
+
+        # Analyze conversation content for intellectual discussion markers
+        text_lower = text.lower()
+        intellectual_markers = [
+            'explain', 'analyze', 'think about', 'understand', 'theory', 'concept',
+            'philosophy', 'science', 'logic', 'reason', 'how does', 'why does',
+            'what is', 'define', 'meaning of', 'technical', 'academic'
+        ]
+
+        romantic_markers = [
+            '❤️', '💕', '😘', '🥰', 'kiss', 'cuddle', 'hold', 'touch', 'close',
+            'love you', 'miss you', 'romantic', 'intimate', 'affection'
+        ]
+
+        # Check for intellectual content - LOWER temperature
+        if any(marker in text_lower for marker in intellectual_markers):
+            base_temp = min(base_temp, 0.85)  # Cap at 0.85 for intellectual
+
+        # Check for romantic content - RAISE temperature
+        if any(marker in text_lower for marker in romantic_markers):
+            base_temp = max(base_temp, 1.3)  # Boost to at least 1.3 for romantic
+
+        # Romantic companion type gets slight boost by default
+        if self.companion_type == "romantic" and base_temp < 1.1:
+            base_temp += 0.1
+
+        # Clamp temperature to safe range
+        return max(0.7, min(1.4, base_temp))
 
     def _build_prompt(self, text: str, conversation_history: List[Dict], emotion_data: Optional[Dict] = None) -> str:
         """Build minimal prompt with character/user info, time, emotion, and conversation history."""
@@ -497,15 +564,19 @@ Create a wellness-centered space in every response:
         """
         prompt = self._build_prompt(text, conversation_history, emotion_data)
 
+        # Calculate dynamic temperature based on emotion and content
+        temperature = self._calculate_temperature(text, emotion_data)
+
         # Output raw prompt to console for debugging
         # print("=" * 80)
         # print("RAW PROMPT BEING SENT TO LLM:")
         # print("=" * 80)
         # print(prompt)
         # print("=" * 80)
+        # print(f"TEMPERATURE: {temperature}")
+        # print("=" * 80)
 
         # Simple generation params
         max_tokens = 300
-        temperature = 1.0
 
         return prompt, max_tokens, temperature
