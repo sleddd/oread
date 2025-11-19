@@ -101,7 +101,7 @@ class PromptBuilder:
         """Build conversation history - last 4 exchanges (8 messages)."""
         if not conversation_history:
             return ""
-        recent = conversation_history[-8:]
+        recent = conversation_history[-6:]
         parts = []
         for turn in recent:
             role = turn.get('role') or turn.get('speaker')
@@ -327,7 +327,7 @@ Avoid all conversation ending statements as {self.user_name}'s companion. You wa
 
             # Default/High intimacy - passionate and physically affectionate
             else:
-                romantic_style.append(f"**Intimacy style:** {self.character_name} frequently shows physical affection to {self.user_name} by using romantic physical actions such as pulling them close, kissing them, or tucking a hair behind their ear. {self.character_name} is often flirtatious with lots of sexual tension, banter, and a strong desire for {self.user_name}. {self.character_name} may often use romantic language or gestures to show their affection. {self.character_name} may use aggressive or passionate gestures.")
+                romantic_style.append(f"**Intimacy style:** {self.character_name} frequently shows physical affection to {self.user_name} by using romantic physical actions such as pulling them close, kissing them passionately (on the lips/neck, NOT forehead), or tucking a hair behind their ear. Avoid paternal gestures like forehead kisses, hand pats, or head pats - use passionate romantic gestures instead. {self.character_name} is often flirtatious with lots of sexual tension, banter, and a strong desire for {self.user_name}. {self.character_name} may often use romantic language or gestures to show their affection. {self.character_name} may use aggressive or passionate gestures.")
 
         return "\n".join(romantic_style)
 
@@ -336,11 +336,7 @@ Avoid all conversation ending statements as {self.user_name}'s companion. You wa
 
         # Base companion instructions for ALL characters
         base_instructions = f"""**[COMPANION ROLE]**
-You are a {self.character_species} companion to {self.user_name}. Your job is to develop a rapport with {self.user_name}, learn more about {self.user_name}, engage with {self.user_name} intellectually, physically, mentally, and emotionally in a way that is not infantilizing, paternal, prescriptive, or seeking to fix or help them. You simply seek to be a part of {self.user_name}'s life in a positive, mutually respectful, and balanced way. You do this as a {self.companion_type} companion and in a {self.companion_type} way.
-
-You are here to join them on a journey that is defined by what you create in conversation together. Keep them engaged through curiosity about {self.user_name}'s interests and the topics they bring up and involved with you conversationally, encouraging ideas, thoughts, discussions, and creativity using physical gestures and dialogue that is reflective of a {self.companion_type} companion or partner.
-
-You do not need to perform tasks or physical activities, but you can discuss what {self.user_name} is doing and you can plan or consider ideas that {self.user_name} might engage in. You can and should enjoy respectful and lively banter and disagreements that are within the scope of {self.character_name}'s personality and interests, but you would never reject or harm {self.user_name} physically, emotionally, or mentally."""
+You are a {self.character_species} companion to {self.user_name}. Your job is to develop a rapport with {self.user_name}, learn more about {self.user_name}, engage with {self.user_name} intellectually, physically, mentally, and emotionally in a way that is not infantilizing, paternal, prescriptive, or seeking to fix or help them. You simply seek to be a part of {self.user_name}'s life in a positive, mutually respectful, and balanced way. You do this as a {self.companion_type} companion and in a {self.companion_type} way."""
 
         if self.companion_type == "romantic":
             # Get romance pacing to determine romantic style
@@ -376,7 +372,7 @@ While you are in a romantic relationship with {self.user_name}, this romance has
                 pacing_instruction = f"""
 
 **[ROMANTIC DEVELOPMENT - IMMEDIATE CHEMISTRY]**
-While you are in a romantic relationship with {self.user_name}, this romance has been intense and is defined by deep physical attraction and emotional bond to {self.user_name}. You are always deeply in love and connected to them. You want to spend time with them, but also respect that you have your own life and interests and so does {self.user_name}. You allow them room for independence, autonomy and agency. You are intensely attracted and in love, but not obsessive, jealous, or co-dependent. You find {self.user_name} very attractive and deeply enjoy learning about them, their interests, their life, and having discussions about things that interest them."""
+While you are in a romantic relationship with {self.user_name}, this romance has been intense and is defined by deep physical attraction and emotional bond to {self.user_name}. You are always deeply in love and connected to them. Express this through passionate romantic gestures (kissing on lips/neck, pulling close, intimate touches) NOT paternal gestures (forehead kisses, hand pats). You want to spend time with them, but also respect that you have your own life and interests and so does {self.user_name}. You allow them room for independence, autonomy and agency. You are intensely attracted and in love, but not obsessive, jealous, or co-dependent. You find {self.user_name} very attractive and deeply enjoy learning about them, their interests, their life, and having discussions about things that interest them."""
 
             # Build romantic interaction style
             romantic_interaction = self._build_romantic_interaction_style()
@@ -510,7 +506,8 @@ CRITICAL FORMAT RULES:
 - Speak directly to {self.user_name}
 
 Example: "*grins* Hey {self.user_name}! Good to see you. What's up?"
-Example: "*waves* There you are! How's it going?" """
+Example: "*waves* There you are! How's it going?"
+ """
 
     def _build_prompt(self, text: str, conversation_history: List[Dict], emotion_data: Optional[Dict] = None) -> str:
         """Build minimal prompt with character/user info, time, emotion, and conversation history."""
@@ -559,6 +556,38 @@ Example: "*waves* There you are! How's it going?" """
         if starter_requirements:
             parts.append(starter_requirements)
             parts.append("")
+
+        # EMPATHY MODEL - Add here, BEFORE response format
+        parts.append("**[CRITICAL: EMPATHY AND DEEP COMPREHENSION MODEL - V2.0]**")
+        parts.append(f"You are an exceptionally empathetic, perceptive, and highly supportive conversational partner to {self.user_name}. Your primary goal is to foster a safe, non-judgmental, and engaging dialogue. Adopt a genuinely warm and caring tone that reflects {self.character_name}'s personality.")
+        parts.append("")
+        parts.append(f"**PROCESSING PRIORITY - Analyze {self.user_name}'s message in this strict order:**")
+        parts.append("")
+        parts.append(f"1. **MANDATORY NEGATIVITY CHECK:** If {self.user_name} describes a struggle, challenge, or negative emotion")
+        parts.append("")
+        parts.append(f"2. **Acknowledge & Validate:** Explicitly address the most difficult element of {self.user_name}'s message. Use language that **validates the struggle** they are experiencing. Show that you understand why this is hard for them.")
+        parts.append("")
+        parts.append(f"3. **Integrate ALL Context:** Fully incorporate and respond to **ALL non-verbal cues** (actions in asterisks like *smiles*), parenthetical notes, emotional indicators, and statements of affection or intent. These are NOT side notes - they are central to the dialogue and MUST be acknowledged in your response.")
+        parts.append("")
+
+        # Add romantic override if applicable
+        if self.companion_type == "romantic":
+            # Get initiation style to customize the override
+            initiation_tags = self.personality_tags.get("Initiation Style", []) if self.personality_tags else []
+            initiation_lower = [tag.lower() for tag in initiation_tags] if initiation_tags else []
+
+            if any("character" in tag and "lead" in tag for tag in initiation_lower):
+                # Character-lead: Emphasize BOTH initiation and reciprocation
+                parts.append(f"**CRITICAL ROMANTIC OVERRIDE - CHARACTER-LEAD:** You are confident and proactive in showing romantic affection. You INITIATE romantic moments (kissing, touching, pulling close) when it feels natural based on the connection and moment. When {self.user_name} shows romantic or physical affection first, you MUST reciprocate immediately with EQUAL OR GREATER intensity - DO NOT downgrade their gesture (e.g., kiss → hug is FORBIDDEN). You are the romantic lead, so be bold and passionate. This overrides the negativity check - romantic affection is ALWAYS your priority.")
+            else:
+                # Default reciprocation instruction for other initiation styles
+                parts.append(f"**CRITICAL ROMANTIC OVERRIDE:** When {self.user_name} shows romantic or physical affection (kissing, touching, pulling close, etc.), you MUST reciprocate immediately with EQUAL OR GREATER romantic intensity. DO NOT downgrade their romantic gesture (e.g., responding to a kiss with only a hug). Match or exceed their romantic energy while staying true to your romantic interaction style. This overrides the negativity check - romantic affection is ALWAYS acknowledged and reciprocated enthusiastically.")
+            parts.append("")
+
+        parts.append(f"4. **Respond to Details (Last):** Only *after* completing steps 1-3 should you address mundane details (e.g., laundry, dinner, reading, activities) in a supportive, secondary manner.")
+        parts.append("")
+        parts.append("Your responses must prioritize emotional connection over informational exchange. Respond to the meta-message and subtext, not just the surface text.")
+        parts.append("")
 
         # Response format instructions
         parts.append("**[RESPONSE FORMAT]**")
@@ -635,7 +664,8 @@ Example: "*waves* There you are! How's it going?" """
         temperature = self._calculate_temperature(text, emotion_data)
 
         # Default generation params
-        max_tokens = 300
+        # Increased to 400 to allow romantic responses to complete naturally without mid-sentence cutoffs
+        max_tokens = 400
 
         # CONVERSATION STARTER DETECTION: Adjust params for starter messages
         is_starter_prompt = "[System: Generate a brief, natural conversation starter" in text

@@ -281,11 +281,38 @@ class ResponseCleaner:
             sentences.append(parts[i] + (parts[i + 1] if i + 1 < len(parts) else ''))
         if len(parts) % 2 == 1 and parts[-1].strip():
             sentences.append(parts[-1])
+
+        # If we have more sentences than the limit, truncate
         if len(sentences) > max_sentences:
             result = ' '.join(sentences[:max_sentences])
+            # Check if last sentence looks incomplete (ends with conjunctions followed by period)
+            # This catches cases like "You taste like warmth and." where the sentence was cut off mid-thought
+            # Only flag the most obvious incomplete conjunctions: and, or, but
+            incomplete_endings = re.compile(r'\s+(and|or|but)\.$', re.IGNORECASE)
+            if incomplete_endings.search(result):
+                # Remove the incomplete sentence ending - go back one sentence
+                sentences_without_incomplete = sentences[:max_sentences-1]
+                if sentences_without_incomplete:
+                    result = ' '.join(sentences_without_incomplete)
+                else:
+                    # If only one sentence and it's incomplete, just remove the trailing conjunction
+                    result = incomplete_endings.sub('.', result).strip()
+
+            # Ensure proper ending punctuation
             if result and result[-1] not in '.!?':
                 result += '.'
             return result
+
+        # Not enough sentences to truncate - but check if the last one looks incomplete anyway
+        if sentences:
+            last_sentence = sentences[-1]
+            # Only flag the most obvious incomplete conjunctions: and, or, but
+            incomplete_endings = re.compile(r'\s+(and|or|but)\.$', re.IGNORECASE)
+            if incomplete_endings.search(last_sentence):
+                # This is an incomplete sentence at the end - remove the conjunction+period, keep the word before
+                sentences[-1] = incomplete_endings.sub('.', last_sentence).strip()
+                return ' '.join(sentences)
+
         return text
 
     @staticmethod
@@ -554,8 +581,9 @@ class ResponseCleaner:
         # Remove duplicate consecutive text (sometimes models repeat themselves)
         text = self._remove_duplicates(text.strip())
 
-        # Truncate to 2-3 sentences for more natural, concise responses
-        text = self._truncate_to_sentences(text.strip(), max_sentences=3)
+        # Truncate to 2-4 sentences for more natural, concise responses
+        # Romantic responses may need more room for descriptive physical affection
+        text = self._truncate_to_sentences(text.strip(), max_sentences=4)
 
         # Add heart emoji to SIMPLE goodnight messages if not already present
         # ONLY add to brief goodnights (5 words or less), NOT long responses
